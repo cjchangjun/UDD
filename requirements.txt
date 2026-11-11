@@ -1,0 +1,13 @@
+# Environment used for all Phase 1 results: Python 3.12, NVIDIA RTX A6000, CUDA 12.1 build of PyTorch.
+# Install PyTorch first (GPU build):
+#   pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+# (CPU only: --index-url https://download.pytorch.org/whl/cpu)
+torch==2.5.1
+numpy==2.3.5
+scipy==1.17.0
+scikit-learn==1.8.0
+matplotlib==3.10.8
+joblib==1.5.3
+einops==0.8.2
+pytest==9.1.1
+ipykernel==7.4.0        # effective_kernel/effective_kernel_demo.ipynb (Jupyter / VS Code)

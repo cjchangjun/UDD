@@ -1,0 +1,243 @@
+{
+  "split": "validation",
+  "std_convention": "sample std, ddof=1; null for one seed",
+  "runs": [
+    {
+      "seed": 0,
+      "parameters": 20454,
+      "epoch": 13,
+      "accuracy": 0.95,
+      "macro_f1": 0.9531255063743771,
+      "confusion_matrix": [
+        [
+          311,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          245,
+          4,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          323,
+          31,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          50,
+          323,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    },
+    {
+      "seed": 1,
+      "parameters": 20454,
+      "epoch": 11,
+      "accuracy": 0.9469387755102041,
+      "macro_f1": 0.9518753811239361,
+      "confusion_matrix": [
+        [
+          311,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          258,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          306,
+          48,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          52,
+          321,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    },
+    {
+      "seed": 2,
+      "parameters": 20454,
+      "epoch": 15,
+      "accuracy": 0.9551020408163265,
+      "macro_f1": 0.959541368994234,
+      "confusion_matrix": [
+        [
+          311,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          260,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          317,
+          36,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          50,
+          324,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    }
+  ],
+  "checkpoints": {
+    "0": "/home/cjoh/UDD/phase1/runs/har_mamba/s0/seed_0/best.pt",
+    "1": "/home/cjoh/UDD/phase1/runs/har_mamba/s1/seed_1/best.pt",
+    "2": "/home/cjoh/UDD/phase1/runs/har_mamba/s2/seed_2/best.pt"
+  },
+  "config": {
+    "dataset": "har",
+    "data_root": "/home/cjoh/UDD/data/har",
+    "download": false,
+    "model": "mamba",
+    "lti": false,
+    "out": "/home/cjoh/UDD/phase1/runs/har_mamba/s0",
+    "seeds": [
+      0
+    ],
+    "epochs": 20,
+    "batch_size": 64,
+    "d_model": 32,
+    "d_state": 16,
+    "n_layers": 2,
+    "d_conv": 4,
+    "split_seed": 42,
+    "subset_seed": 123,
+    "permutation_seed": 42,
+    "missing_seed": 456,
+    "image_size": 14,
+    "threads": 2,
+    "train_subset": null,
+    "val_subjects": null,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "val_fraction": 0.2,
+    "dt_min": 0.001,
+    "dt_max": 0.1,
+    "delta_scale": 1.0,
+    "keep_rate": 1.0,
+    "downsample_factor": 1,
+    "downsample_method": "aa",
+    "gap_mode": "ignore",
+    "image_filter": "blur",
+    "image_mode": "pixel",
+    "scan": "raster",
+    "device": "cuda",
+    "versions": {
+      "python": "3.12.15",
+      "torch": "2.5.1+cu121",
+      "numpy": "2.3.5"
+    }
+  },
+  "accuracy": {
+    "mean": 0.9506802721088435,
+    "std": 0.004123930494211611
+  },
+  "macro_f1": {
+    "mean": 0.9548474188308491,
+    "std": 0.004112855381326187
+  }
+}

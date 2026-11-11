@@ -1,0 +1,243 @@
+{
+  "split": "validation",
+  "std_convention": "sample std, ddof=1; null for one seed",
+  "runs": [
+    {
+      "seed": 0,
+      "parameters": 15910,
+      "epoch": 9,
+      "accuracy": 0.9581632653061225,
+      "macro_f1": 0.9621453140299524,
+      "confusion_matrix": [
+        [
+          311,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          260,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          337,
+          17,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          63,
+          310,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    },
+    {
+      "seed": 1,
+      "parameters": 15910,
+      "epoch": 12,
+      "accuracy": 0.9586734693877551,
+      "macro_f1": 0.9620692004582708,
+      "confusion_matrix": [
+        [
+          308,
+          3,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          257,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          326,
+          28,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          46,
+          328,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    },
+    {
+      "seed": 2,
+      "parameters": 15910,
+      "epoch": 20,
+      "accuracy": 0.9545918367346938,
+      "macro_f1": 0.9583873916173838,
+      "confusion_matrix": [
+        [
+          311,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          280,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          256,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          322,
+          31,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          51,
+          322,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          380
+        ]
+      ],
+      "valid_length_min": 128,
+      "valid_length_max": 128,
+      "valid_length_mean": 128.0
+    }
+  ],
+  "checkpoints": {
+    "0": "/home/cjoh/UDD/phase1/runs/har_lti/s0/seed_0/best.pt",
+    "1": "/home/cjoh/UDD/phase1/runs/har_lti/s1/seed_1/best.pt",
+    "2": "/home/cjoh/UDD/phase1/runs/har_lti/s2/seed_2/best.pt"
+  },
+  "config": {
+    "dataset": "har",
+    "data_root": "/home/cjoh/UDD/data/har",
+    "download": false,
+    "model": "mamba",
+    "lti": true,
+    "out": "/home/cjoh/UDD/phase1/runs/har_lti/s0",
+    "seeds": [
+      0
+    ],
+    "epochs": 20,
+    "batch_size": 64,
+    "d_model": 32,
+    "d_state": 16,
+    "n_layers": 2,
+    "d_conv": 4,
+    "split_seed": 42,
+    "subset_seed": 123,
+    "permutation_seed": 42,
+    "missing_seed": 456,
+    "image_size": 14,
+    "threads": 2,
+    "train_subset": null,
+    "val_subjects": null,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "val_fraction": 0.2,
+    "dt_min": 0.001,
+    "dt_max": 0.1,
+    "delta_scale": 1.0,
+    "keep_rate": 1.0,
+    "downsample_factor": 1,
+    "downsample_method": "aa",
+    "gap_mode": "ignore",
+    "image_filter": "blur",
+    "image_mode": "pixel",
+    "scan": "raster",
+    "device": "cuda",
+    "versions": {
+      "python": "3.12.15",
+      "torch": "2.5.1+cu121",
+      "numpy": "2.3.5"
+    }
+  },
+  "accuracy": {
+    "mean": 0.9571428571428572,
+    "std": 0.0022239280324187504
+  },
+  "macro_f1": {
+    "mean": 0.9608673020352024,
+    "std": 0.002148002578967755
+  }
+}
