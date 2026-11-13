@@ -1,7 +1,7 @@
-# UDD Mamba Project: Phase 1 재현용 폴더
+# UDD Mamba Project: Phase 1 재현과 Phase 2 (T3)
 
 XAI639 term project의 Phase 1(Tasks 1.3–1.5)에서 쓴 데이터, data split, 코드, 학습된 weight를 모았습니다.
-Phase 2는 이 폴더에서 시작하면 됩니다.
+Phase 2 T3(effective kernel 분석)는 `effective_kernel/`에 있고, 정리 문서는 `effective_kernel/T3_report.pdf`입니다.
 
 ## 폴더 구성
 
@@ -12,8 +12,8 @@ UDD_Mamba_Phase1/
 ├── splits/             Phase 1에서 쓴 train/validation split
 ├── checkpoints/        모델별, seed별 best weight와 학습 기록
 ├── scripts/            학습, 재평가, frequency response 스크립트
-├── effective_kernel/   Phase 2 (T3): 학습된 Mamba의 effective kernel 계산과 검증
-├── results/            scripts/frequency_response.py의 출력
+├── effective_kernel/   Phase 2 (T3): effective kernel 코드, 분석 노트북, 정리 문서(T3_report)
+├── results/            Phase 1 출력(scripts/frequency_response.py)과 T3 결과(results/t3/)
 └── requirements.txt
 ```
 
@@ -128,6 +128,11 @@ python scripts/frequency_response.py
 
 ## Effective kernel (Phase 2, T3)
 
+T3 "What Filter Has Mamba Learned?" 파트입니다.
+
+- **정리 문서**: `effective_kernel/T3_report.pdf`. 정의, 검증, 결과(그림 포함), 요구사항 점검이 들어 있습니다.
+- **노트북**: `effective_kernel/t3_analysis.ipynb`. 문서의 모든 수치와 그림을 차례로 확인합니다. `effective_kernel/` 폴더에서 실행합니다.
+
 Mamba의 SSM은 window 하나, layer 하나, SSM 채널(d_inner = 64) 하나마다 인과적 선형 사상 y = K u입니다. `effective_kernel/effective_kernel.py`는 이 K를 Ali et al. (2024)의 hidden-attention 식(Eq. 12)에 starter SSM의 skip 항 D를 대각선에 더한 형태로 계산합니다.
 
 ```
@@ -135,7 +140,7 @@ K[i, j] = Σ_n C_i[n] · exp(A[n] · (Δ_{j+1} + … + Δ_i)) · Δ_j · B_j[n] 
         + D                                                            (i = j)
 ```
 
-- u는 SSM 입력(in_proj → conv1d → SiLU 이후), y는 gate(SiLU(z)) 전 SSM 출력입니다. 행 i는 출력 시점, 열 j는 입력 시점입니다.
+- u는 SSM 입력(block 안의 RMSNorm → in_proj → conv1d → SiLU 이후), y는 gate(SiLU(z))를 곱하기 전의 SSM 출력입니다. 행 i는 출력 시점, 열 j는 입력 시점입니다.
 - starter는 수정하지 않습니다. Δ, A, B, C는 starter의 `set_record()`로, D는 모델 파라미터에서 읽습니다.
 
 ```python
@@ -156,16 +161,72 @@ K.dense()        # 전체 (64 sample이면 float64로 약 1 GB)
 - `K`는 Δ, A, B, C, D만 저장하고, 인덱싱할 때 요청한 행렬만 float64로 계산합니다. 인덱스는 int, slice, list, bool mask(CPU) 모두 됩니다.
 - `logits`는 `model(x)`와 같습니다. `include_skip=False`로 하면 D를 뺀 논문 식 그대로의 행렬을 얻습니다.
 
-검증:
+### 파일 구성 (`effective_kernel/`)
+
+| 파일 | 내용 |
+|---|---|
+| `T3_report.pdf` | T3 정리 문서 (정의, 검증, 결과, 요구사항 점검) |
+| `t3_analysis.ipynb` | 문서의 수치와 그림을 확인하는 노트북 (그림 1, 2를 `results/t3/`에 저장) |
+| `effective_kernel.py` | hidden-attention kernel K (위의 식), lazy 인덱싱 |
+| `check_effective_kernel.py` | 검증 (LTI에서 `lti_kernel`과 일치 등) |
+| `spectra.py` | K의 행 스펙트럼과 class별 요약 (시간, example, 채널에 걸친 평균) |
+| `run_t3.py` | seed 0, 1, 2의 class별 스펙트럼 계산, 그림 3과 `t3_summary.json` 저장 |
+| `plots.py` | 그림 3 |
+| `jacobian.py` | whole-block Jacobian (확장) |
+| `effective_kernel_demo.ipynb` | K의 사용 예와 행렬 그림 (간단한 확인용) |
+
+### 검증
 
 ```bash
 python effective_kernel/check_effective_kernel.py
 ```
 
-selective와 LTI 모델의 모든 seed에서 다음을 확인합니다. 모델을 float64로 돌리며, 오차는 모두 1e-14 이하입니다.
-- `K u`가 starter `ssm()` 출력과 같은지
-- LTI 모델의 K가 starter `lti_kernel(128)`의 Toeplitz 행렬과 같은지(D 포함과 제외 모두)
-- `logits`가 `model(x)`와 같은지
+selective와 LTI 모델의 모든 seed에서 확인합니다. 모델은 float64로 돌립니다.
+- LTI 모델의 K가 starter `lti_kernel(128)`의 Toeplitz 행렬과 같은지(D 포함과 제외 모두, 오차 1e-15 수준)
+- `K u`가 starter `ssm()` 출력과 같은지, `logits`가 `model(x)`와 같은지
 - `K[s, l, c]`가 `K.dense()[s, l, c]`와 비트 단위로 같은지
+- Jacobian: block Jacobian이 중심 유한 차분과 같은지, LTI에서 SSM 단계만의 Jacobian이 K와 같은지
 
-간단한 사용 예와 행렬 그림은 `effective_kernel/effective_kernel_demo.ipynb`에 있습니다(`effective_kernel/` 폴더에서 실행).
+### T3 분석 실행
+
+```bash
+python effective_kernel/run_t3.py                 # seed 0 1 2, 모든 validation window (seed당 약 8분)
+python effective_kernel/run_t3.py --seeds 0       # seed 하나만 (seed별로 병렬 실행 가능)
+python effective_kernel/run_t3.py --plots_only    # 저장된 결과에서 그림 3과 요약만 다시 만들기
+```
+
+validation data만 쓰고 official test set은 읽지 않습니다. 결과는 "Mamba의 frequency response"가 아니라 입력에 조건부인 요약입니다.
+
+| 출력 (`results/t3/`) | 내용 | 만드는 곳 |
+|---|---|---|
+| `t3_input_windows.png` | 그림 1: 세 validation window의 입력과 예측 | 노트북 |
+| `t3_kernel_matrices.png` | 그림 2: 같은 window의 K 행렬 (layer 0, 채널 0) | 노트북 |
+| `t3_class_spectra.png` | 그림 3: class별 평균 스펙트럼 (layer별, LTI 커널 곡선 포함) | `run_t3.py` |
+| `t3_summary.json` | 요약 설정과 class 평균 스펙트럼 사이의 거리 (seed 평균) | `run_t3.py` |
+| `selective_D_seed<s>.npz`, `lti_D_seed<s>.npz` | class별 스펙트럼 (노트북이 읽음) | `run_t3.py` |
+
+노트북은 `results/t3/`의 npz가 있으면 읽고, 없으면 class당 일부 window로 직접 계산합니다.
+
+### Conditional summary 사용법
+
+class별 요약 곡선은 K의 각 행(출력 시점 i의 필터)을 FFT한 크기를 시간(i 전체) → class의 window → SSM 채널 순서로 평균한 것입니다(정의는 `T3_report.pdf` 5.1절). 저장된 결과를 읽거나 직접 계산할 수 있습니다.
+
+```python
+import sys, numpy as np; sys.path[:0] = ["mamba_starter", "effective_kernel"]
+from evaluate import load_checkpoint, evaluation_data
+import spectra
+
+# 1) 저장된 결과 (validation window 전체, seed 0)
+spec = dict(np.load("results/t3/selective_D_seed0.npz"))
+
+# 2) 직접 계산 (max_per_class를 빼면 전체 window, seed 하나에 약 7분)
+model, ckpt = load_checkpoint("checkpoints/mamba_selective/seed_0/best.pt", "cuda")
+x, y = evaluation_data(ckpt, data_root="data/har")               # validation window
+spec = spectra.class_mean_spectra(spectra.hidden_attention(model), x, y, max_per_class=20)
+
+S = spectra.channel_mean(spec)     # [class 6, layer 2, 주파수 65]: class별 요약 곡선
+spec["freq"]                       # 0–25 Hz, 65개 (간격 50/128 Hz)
+spec["count"]                      # class별 window 수
+```
+
+class 순서는 `plots.CLASSES`(WALKING, UPSTAIRS, DOWNSTAIRS, SITTING, STANDING, LAYING)입니다. seed 0, 1, 2의 곡선을 평균하고 표준편차를 낸 것이 그림 3입니다(`plots.fig_class_spectra`).

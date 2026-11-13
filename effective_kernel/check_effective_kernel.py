@@ -10,7 +10,12 @@ reflect the implementation and not float32 rounding):
   * LTI only: every K[s, l, c] is the Toeplitz matrix of the starter lti_kernel(T), with D
     (include_skip=True) and without D (include_skip=False);
   * K[s, l, c] equals K.dense()[s, l, c] bit for bit.
+Jacobian kernels (jacobian.py), one window per seed, in float64 on --device (default: cuda if available):
+  * the block Jacobian matches a central finite difference of the block in a random direction;
+  * LTI only: the channel-diagonal Jacobian of the SSM sublayer equals K exactly (for selective they differ: J also
+    differentiates through Delta, B, C).
 """
+import argparse
 import sys
 from pathlib import Path
 
@@ -20,9 +25,11 @@ sys.path.insert(0, str(ROOT / "mamba_starter"))
 import torch  # noqa: E402
 from evaluate import load_checkpoint, evaluation_data  # noqa: E402
 from effective_kernel import effective_kernels  # noqa: E402
+import jacobian  # noqa: E402
 
 DATA = ROOT / "data" / "har"
 TOL = 1e-10
+FD_TOL = 1e-7                  # central finite difference with step 1e-6
 
 
 def capture_ssm(model):
@@ -74,8 +81,35 @@ def check(name, seed):
     return ok
 
 
+def check_jacobian(name, seed, device):
+    model, ckpt = load_checkpoint(ROOT / "checkpoints" / name / f"seed_{seed}" / "best.pt", device)
+    model = model.double()
+    for p in model.parameters():
+        p.requires_grad_(False)
+    x, _ = evaluation_data(ckpt, data_root=str(DATA))
+    xb = torch.as_tensor(x[:1], dtype=torch.float64, device=device)
+    err = {}
+    for l, z in enumerate(jacobian.block_inputs(model, xb)):
+        fn = jacobian.layer_function(model, l, "block")
+        J = jacobian.full_jacobian(fn, z[0])
+        d, eps = torch.randn_like(z[0]), 1e-6
+        fd = (fn((z[0] + eps * d)[None]) - fn((z[0] - eps * d)[None]))[0] / (2 * eps)
+        err[f"FD L{l}"] = ((torch.einsum("iojc,jc->io", J, d) - fd).abs().max() / fd.abs().max()).item()
+    ok = all(v < FD_TOL for v in err.values())
+    if name == "mamba_lti":
+        K = effective_kernels(model, xb)[1][:]
+        err["J_ssm-K"] = ((jacobian.jacobian_kernels(model, xb, "ssm").to(device) - K.to(device)).abs().max() / K.abs().max()).item()
+        ok = ok and err["J_ssm-K"] < TOL
+    print(f"{name:16s} seed {seed}  jacobian  " + "  ".join(f"{k}={v:.1e}" for k, v in err.items()) + f"  {'OK' if ok else 'FAIL'}")
+    return ok
+
+
 def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu", help="device of the Jacobian checks")
+    args = p.parse_args()
     results = [check(name, seed) for name in ["mamba_selective", "mamba_lti"] for seed in [0, 1, 2]]
+    results += [check_jacobian(name, seed, args.device) for name in ["mamba_selective", "mamba_lti"] for seed in [0, 1, 2]]
     print("all checks passed" if all(results) else "SOME CHECKS FAILED")
     sys.exit(0 if all(results) else 1)
 

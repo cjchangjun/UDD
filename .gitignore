@@ -4,3 +4,4 @@ __pycache__/
 data/
 .ipynb_checkpoints/
 ref_papers/
+effective_kernel/T3_report.md
