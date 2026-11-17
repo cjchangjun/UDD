@@ -209,7 +209,7 @@ validation data만 쓰고 official test set은 읽지 않습니다. 결과는 "M
 
 ### Conditional summary 사용법
 
-class별 요약 곡선은 K의 각 행(출력 시점 i의 필터)을 FFT한 크기를 시간(i 전체) → class의 window → SSM 채널 순서로 평균한 것입니다(정의는 `T3_report.pdf` 5.1절). 저장된 결과를 읽거나 직접 계산할 수 있습니다.
+class별 요약 곡선은 K의 각 행(출력 시점 i의 필터)을 lag j = 0..63으로 쓴 K[i, i−j]를 길이 64로 FFT한 크기를 시간(i = 63..127) → class의 window → SSM 채널 순서로 평균한 것입니다(정의는 `T3_report.pdf` 5.1절). 저장된 결과를 읽거나 직접 계산할 수 있습니다.
 
 ```python
 import sys, numpy as np; sys.path[:0] = ["mamba_starter", "effective_kernel"]
@@ -224,8 +224,8 @@ model, ckpt = load_checkpoint("checkpoints/mamba_selective/seed_0/best.pt", "cud
 x, y = evaluation_data(ckpt, data_root="data/har")               # validation window
 spec = spectra.class_mean_spectra(spectra.hidden_attention(model), x, y, max_per_class=20)
 
-S = spectra.channel_mean(spec)     # [class 6, layer 2, 주파수 65]: class별 요약 곡선
-spec["freq"]                       # 0–25 Hz, 65개 (간격 50/128 Hz)
+S = spectra.channel_mean(spec)     # [class 6, layer 2, 주파수 33]: class별 요약 곡선
+spec["freq"]                       # 0–25 Hz, 33개 (간격 50/64 Hz)
 spec["count"]                      # class별 window 수
 ```
 

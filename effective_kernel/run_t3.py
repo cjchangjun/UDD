@@ -62,7 +62,7 @@ def make_figures(args, out):
     sel, lti = (load_specs(out, n, seeds) for n in ["selective_D", "lti_D"])
     plots.fig_class_spectra(sel, lti).savefig(out / "t3_class_spectra.png", dpi=150)
     summary = {"seeds": [s for s in seeds if (out / f"selective_D_seed{s}.npz").exists()],
-               "rows_averaged": "all output times i = 0..127", "spectrum": "magnitude |rfft_j K[i, :]|, FFT length 128 -> 65 frequencies (0-25 Hz), no window",
+               "rows_averaged": "output times i = 63..127", "spectrum": "magnitude |rfft_j K[i, i - j]|, lags j = 0..63, FFT length 64 -> 33 frequencies (0-25 Hz), no window",
                "windows_per_class": sel[0]["count"].tolist(),
                "class_distance_percent_selective": [np.mean([spectra.relative_distance(spectra.channel_mean(s)[:, l]) for s in sel], 0).round(2).tolist() for l in range(2)]}
     (out / "t3_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
