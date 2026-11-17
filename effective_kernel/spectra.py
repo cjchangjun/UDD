@@ -3,11 +3,11 @@
 K[i, :] is the kernel the layer applies at output time i (a "frozen-time" filter over the input
 times). Row i is written over the lag j: K[i, i - j], j = 0..LAGS-1 (j = 0 is the diagonal K[i, i], j = 63 is
 K[i, i - 63]). Every row has the same length 64, so only the rows i = 63..127 are used (row i < 63 has fewer
-than 64 past inputs). Its magnitude spectrum is |rfft_j K[i, i - j]|: an FFT of length 64, i.e. 33 frequencies
+than 64 past inputs). Its power spectrum is |rfft_j K[i, i - j]|^2: an FFT of length 64, i.e. 33 frequencies
 from 0 to 25 Hz in steps of 50/64 = 0.78 Hz (no window). In the LTI case K[i, i - j] = k[j] (lti_kernel).
 A conditional summary of a time-varying, input-conditioned kernel is built in this order:
 
-    rows i = 63..127  ->  mean of the magnitudes (not power)  ->  windows of one class  ->  channels.
+    rows i = 63..127  ->  mean of the powers |.|^2  ->  windows of one class  ->  channels.
 
 Everything here works on any kernel source `kernel_fn(x) -> [S, layers, C, L, L]`, e.g. `hidden_attention(model)`
 below (effective_kernel.py).
@@ -42,8 +42,8 @@ def lag_rows(K, lags=LAGS):
 
 
 def row_spectra(K, lags=LAGS):
-    """|rfft over the lag j| of K[i, i - j], rows i = lags-1..L-1 -> [..., L - lags + 1, lags // 2 + 1]."""
-    return torch.fft.rfft(lag_rows(K, lags), n=lags, dim=-1).abs()
+    """|rfft over the lag j|^2 of K[i, i - j], rows i = lags-1..L-1 -> [..., L - lags + 1, lags // 2 + 1]."""
+    return torch.fft.rfft(lag_rows(K, lags), n=lags, dim=-1).abs() ** 2
 
 
 def select_windows(y, num_classes, max_per_class=None):

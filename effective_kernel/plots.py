@@ -1,6 +1,6 @@
 """Figures of the T3 analysis, shared by run_t3.py and the notebook.
 
-Every figure shows a conditional summary of the effective kernels (magnitude |rfft| of the kernel rows,
+Every figure shows a conditional summary of the effective kernels (power |rfft|^2 of the kernel rows,
 see spectra.py), not "the frequency response of Mamba". Lines are the mean over seeds, bands +/- 1 std
 over seeds. Frequencies are non-negative, in Hz; the dataset was low-pass filtered at 20 Hz.
 """
@@ -33,7 +33,7 @@ def seed_stats(specs, layer):
     return S.mean(0), (S.std(0, ddof=1) if len(S) > 1 else np.zeros_like(S[0]))
 
 
-def draw_class_spectra(ax, specs, layer, title=None, ylabel="mean |FFT of kernel row|"):
+def draw_class_spectra(ax, specs, layer, title=None, ylabel="mean |FFT of kernel row|$^2$"):
     f = specs[0]["freq"]
     mean, std = seed_stats(specs, layer)
     for c in range(len(mean)):
